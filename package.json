@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-balance-badge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Always-visible DeepSeek account balance pill for DeepSeek Harness — auto-refreshing, shows the same topped-up balance as Settings → Account.",
   "license": "MIT",
   "author": "reg4916",
