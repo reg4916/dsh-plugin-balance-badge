@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "title": "DeepSeek 余额徽标",
+    "description": "在侧边栏显示账户充值余额并自动刷新。"
+  },
+  "balance": "余额",
+  "bonus": "赠金",
+  "refresh": "刷新余额",
+  "loading": "正在加载余额",
+  "signedOut": "登录后查看余额",
+  "unavailable": "余额不可用",
+  "openAccount": "打开账户设置",
+  "updatedAt": "更新于"
+}

@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "title": "DeepSeek Balance Badge",
+    "description": "Shows the topped-up account balance in the sidebar and refreshes it automatically."
+  },
+  "balance": "Balance",
+  "bonus": "Bonus",
+  "refresh": "Refresh balance",
+  "loading": "Loading balance",
+  "signedOut": "Sign in to view balance",
+  "unavailable": "Balance unavailable",
+  "openAccount": "Open Account settings",
+  "updatedAt": "Updated"
+}

@@ -1,0 +1,4 @@
+# dsh bundle patch: inserts the balance badge plugin row into a profile's layer stack.
+- insert:
+    - id: balance-badge
+      name: dsh-plugin-balance-badge

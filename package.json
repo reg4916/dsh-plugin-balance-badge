@@ -1,0 +1,61 @@
+{
+  "name": "dsh-plugin-balance-badge",
+  "version": "1.0.0",
+  "description": "Always-visible DeepSeek account balance pill for DeepSeek Harness — auto-refreshing, shows the same topped-up balance as Settings → Account.",
+  "license": "MIT",
+  "author": "reg4916",
+  "type": "module",
+  "main": "index.js",
+  "icon": "./icon.svg",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek",
+    "deepseek-harness",
+    "harness-plugin",
+    "balance",
+    "account",
+    "sidebar"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reg4916/dsh-plugin-balance-badge.git"
+  },
+  "homepage": "https://github.com/reg4916/dsh-plugin-balance-badge",
+  "bugs": {
+    "url": "https://github.com/reg4916/dsh-plugin-balance-badge/issues"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-api-remotes"
+      ]
+    }
+  },
+  "scripts": {
+    "test": "node test/contract.test.mjs"
+  }
+}
