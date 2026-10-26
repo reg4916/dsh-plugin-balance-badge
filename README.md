@@ -7,6 +7,8 @@ Always-visible **DeepSeek account balance** for DeepSeek Harness. A small pill i
 the top-left window strip of the sidebar shows the same *Topped-up balance* as
 **Settings → Account**, and keeps itself up to date.
 
+![The balance pill in the sidebar window strip](docs/balance-badge.png)
+
 ```
 ⬤ ⬤ ⬤        ⌄
    ●  ██ $16.59        ← the balance pill (macOS window strip)
