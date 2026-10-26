@@ -56,7 +56,8 @@
     }
   },
   "scripts": {
-    "test": "node test/contract.test.mjs"
+    "test": "node test/contract.test.mjs",
+    "prepublishOnly": "node --check client.js && node --check index.js && node test/contract.test.mjs"
   },
   "publishConfig": {
     "access": "public"
