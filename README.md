@@ -1,6 +1,7 @@
 # dsh-plugin-balance-badge
 
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-plugin-4D6BFE)](https://github.com/deepseek-ai/deepseek-harness)
+[![npm](https://img.shields.io/npm/v/dsh-plugin-balance-badge)](https://www.npmjs.com/package/dsh-plugin-balance-badge)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 Always-visible **DeepSeek account balance** for DeepSeek Harness. A small pill in
@@ -40,11 +41,22 @@ the top-left window strip of the sidebar shows the same *Topped-up balance* as
 
 ## Install
 
-### From the GUI (recommended, Desktop and Web)
+### From npm (prebuilt, recommended)
+
+```
+dsh-plugin-balance-badge
+```
+
+An npm install is prebuilt: no repo download, no `allowBuilds` approval, and a
+download figure on the storefront. Use the GitHub spec below only to pin a
+commit that is not published yet.
+
+### From the GUI (Desktop and Web)
 
 Settings → **Plugins** → **Add plugin**, then paste one of:
 
 ```
+dsh-plugin-balance-badge
 github:reg4916/dsh-plugin-balance-badge
 github:reg4916/dsh-plugin-balance-badge#v1.0.0
 ```
@@ -55,13 +67,14 @@ tool) is the supported path there.
 ### With an agent (plugin_manager tool)
 
 Ask the agent to run `install_bundle` with the target
-`github:reg4916/dsh-plugin-balance-badge`. It installs the package, selects the
+`dsh-plugin-balance-badge` (or the GitHub spec
+`github:reg4916/dsh-plugin-balance-badge`). It installs the package, selects the
 bundle, and applies it through the profile's HMR when available.
 
 ### From the CLI (non-managed profiles)
 
 ```sh
-dsh plugin --profile <profile> add github:reg4916/dsh-plugin-balance-badge
+dsh plugin --profile <profile> add dsh-plugin-balance-badge
 ```
 
 ### Manual (development)
@@ -103,6 +116,18 @@ The module is a browser artifact for the Harness module table
 node test/contract.test.mjs     # loads client.js with a stubbed page and asserts
                                 # registration, live data flow, formatting and states
 ```
+
+### Publishing
+
+```sh
+npm login          # once per machine
+npm publish        # unscoped name, publishes as public 1.x
+```
+
+`publish.yml` also publishes from GitHub Actions with npm provenance and needs
+the repository secret `NPM_TOKEN` (an npm automation token); run it from
+**Actions → publish → Run workflow**. Keep the package `repository` field
+pointing at this repo — the registry links npm packages to entries that way.
 
 ```
 .

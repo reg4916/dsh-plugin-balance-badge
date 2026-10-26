@@ -57,5 +57,8 @@
   },
   "scripts": {
     "test": "node test/contract.test.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
