@@ -137,7 +137,9 @@ pointing at this repo — the registry links npm packages to entries that way.
 ├── client.js            # browser half: dictionaries, stylesheet, poller, pill
 ├── locale/{en,ru,zh}.json
 ├── icon.svg
-└── test/contract.test.mjs
+├── test/contract.test.mjs
+├── CONTRIBUTING.md / SECURITY.md
+└── .github/       # issue + PR templates, CI (`test.yml`), publish workflow
 ```
 
 Tuning: `POLL_MS` / `MIN_GAP_MS` in `client.js`.
@@ -150,6 +152,13 @@ Tuning: `POLL_MS` / `MIN_GAP_MS` in `client.js`.
 фокуса в окно и при смене учётной записи; по клику — принудительное обновление, при
 наведении — бонусный баланс и время обновления. Установка: Настройки → Плагины →
 Add plugin → `github:reg4916/dsh-plugin-balance-badge`.
+
+## Contributing & security
+
+Bug reports and pull requests are welcome — see
+[CONTRIBUTING.md](CONTRIBUTING.md) for the development loop and the ground rules.
+Please report security issues **privately** per [SECURITY.md](SECURITY.md), not in a
+public issue.
 
 ## License
 
