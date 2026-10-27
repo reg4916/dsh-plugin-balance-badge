@@ -3,5 +3,6 @@ node_modules/
 *.log
 *.tgz
 .dsh/
+.dsh-code-index/
 dist/
 coverage/
