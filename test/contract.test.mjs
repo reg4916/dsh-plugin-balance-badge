@@ -105,14 +105,17 @@ function makeContext(account) {
 }
 const tick = () => new Promise((resolve) => setTimeout(resolve, 20));
 function renderTree(node) {
-	const out = { text: [], classes: [], button: null };
+	const out = { text: [], classes: [], button: null, value: null };
 	(function walk(n) {
 		if (!n || typeof n !== "object") return;
 		if (n.type === "button") {
 			out.button = n;
 			out.classes.push(n.props.className);
 		}
-		if (n.type === "span" && n.props.className === "dbb-chip__value") out.text.push(n.children.join(""));
+		if (n.type === "span" && n.props.className === "dbb-chip__value") {
+			out.value = n;
+			out.text.push(n.children.join(""));
+		}
 		for (const child of n.children || []) walk(child);
 	})(node);
 	return out;
@@ -146,6 +149,11 @@ const first = renderTree(overlay.component({ ...props }));
 assert.ok(first.classes[0].includes("dbb-chip--frame"));
 assert.deepEqual(first.text, ["$17.43"]);
 assert.match(first.button.props.title, /Balance: \$17\.43/);
+// 1.0.2: the tooltip carries relative freshness and the screen reader gets a live value.
+assert.match(first.button.props.title, /Updated .+\(just now\)/);
+assert.equal(first.value.props["aria-live"], "polite");
+assert.equal(first.value.props["aria-atomic"], "true");
+assert.equal(first.value.props["aria-busy"], "false");
 
 /* ---------- formatting edge cases ---------- */
 registrations.length = 0;

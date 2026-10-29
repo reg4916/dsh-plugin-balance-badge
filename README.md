@@ -4,6 +4,8 @@
 [![npm](https://img.shields.io/npm/v/dsh-plugin-balance-badge)](https://www.npmjs.com/package/dsh-plugin-balance-badge)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
+[![Listed in the Awesome DSH Plugin catalog](https://img.shields.io/badge/catalog-usage%20%26%20billing-6d7cff)](https://awesome-dsh-plugin.com/p/reg4916/dsh-plugin-balance-badge/)
+
 Always-visible **DeepSeek account balance** for DeepSeek Harness. A small pill in
 the top-left window strip of the sidebar shows the same *Topped-up balance* as
 **Settings → Account**, and keeps itself up to date.
@@ -24,12 +26,18 @@ the top-left window strip of the sidebar shows the same *Topped-up balance* as
 - **Refreshes itself**: on load, every 60 s while the page is visible, immediately when
   the window regains focus, and immediately when the stored account credential changes
   (sign-in, sign-out, grant rotation). Click the pill to refresh on demand.
+- **Backs off when the network does**: a failed read retries after 15 s, then 30 s, 60 s and
+  at most 120 s, so an outage is not polled at the normal cadence. One success resets it.
+- **Freshness you can see**: the tooltip reads `Updated 11:34 PM (5 min ago)` and keeps the
+  relative part current without spending a request.
 - **Honest states**: `…` while loading, `--` when signed out / unavailable, and the last
   known amount plus a "stale" hint when a refresh fails — never a fake zero.
 - **Bonus balance** is shown separately in the tooltip (only when positive), exactly like
   Settings → Account; it is never added to the topped-up amount.
 - **Localized** (en / ru / zh) and styled with Harness theme tokens, so it follows the
   active theme and language.
+- **Accessible by default**: the amount is a polite live region, so it is announced when it
+  changes; the pill keeps a focus ring and a descriptive `aria-label`.
 - Pure presentation: no tools, no config, no Host service of its own.
 
 ## Requirements
@@ -43,8 +51,8 @@ the top-left window strip of the sidebar shows the same *Topped-up balance* as
 
 ### From npm (prebuilt, recommended)
 
-```
-dsh-plugin-balance-badge
+```sh
+dsh plugin --profile <profile> add dsh-plugin-balance-badge
 ```
 
 An npm install is prebuilt: no repo download, no `allowBuilds` approval, and a
@@ -58,7 +66,7 @@ Settings → **Plugins** → **Add plugin**, then paste one of:
 ```
 dsh-plugin-balance-badge
 github:reg4916/dsh-plugin-balance-badge
-github:reg4916/dsh-plugin-balance-badge#v1.0.0
+github:reg4916/dsh-plugin-balance-badge#v1.0.2
 ```
 
 The Desktop app owns its profile, so this (or an agent using the `plugin_manager`
@@ -104,7 +112,7 @@ you edited it by hand), then restart the app.
 | Placement (macOS) | frame slot `shell.overlay`, entry `balance-badge`, fixed at the window strip next to the traffic lights |
 | Placement (other) | `sidebar.footer.action`, beside Settings (rail-aware) |
 | Rendering | plain React from the page module table; no `@deepseek-ai/*` import |
-| Refresh | one shared poller per plugin (single-flight, 15 s floor, stale results dropped, paused while hidden) |
+| Refresh | one shared poller per plugin (single-flight, 15 s floor, stale results dropped, paused while hidden, 15→120 s backoff while reads fail) |
 
 The module is a browser artifact for the Harness module table
 (`window.__ModuleLoader__.load({ id, factory })`) plus an empty Host row
@@ -142,7 +150,13 @@ pointing at this repo — the registry links npm packages to entries that way.
 └── .github/       # issue + PR templates, CI (`test.yml`), publish workflow
 ```
 
-Tuning: `POLL_MS` / `MIN_GAP_MS` in `client.js`.
+Tuning: `POLL_MS`, `MIN_GAP_MS`, `RETRY_BASE_MS`, `RETRY_MAX_MS`, `RELATIVE_TICK_MS` in `client.js`.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md). The catalog entry and the Plugin Market point at the
+newest published version, so `dsh plugin --profile <profile> add dsh-plugin-balance-badge`
+always installs the release described there.
 
 ## Русский
 
@@ -150,8 +164,10 @@ Tuning: `POLL_MS` / `MIN_GAP_MS` in `client.js`.
 рядом с кнопками управления (на macOS) — тот же *Topped-up balance*, что в
 **Настройки → Аккаунт**. Обновляется сам: при запуске, раз в 60 секунд, при возврате
 фокуса в окно и при смене учётной записи; по клику — принудительное обновление, при
-наведении — бонусный баланс и время обновления. Установка: Настройки → Плагины →
-Add plugin → `github:reg4916/dsh-plugin-balance-badge`.
+наведении — бонусный баланс и давность обновления («5 мин назад»). Если чтение
+не удалось, следующий запрос откладывается
+(15 → 30 → 60 → 120 с), чтобы не долбить платформу во время сбоя. Установка:
+Настройки → Плагины → Add plugin → `dsh-plugin-balance-badge`.
 
 ## Contributing & security
 

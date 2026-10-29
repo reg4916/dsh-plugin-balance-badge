@@ -26,7 +26,10 @@ window.__ModuleLoader__.load({
 		const NS = "plugin.balance-badge";
 		const POLL_MS = 60_000;
 		const MIN_GAP_MS = 15_000;
-		const CLIENT_META_VERSION = "1.0.0";
+		const RETRY_BASE_MS = 15_000;
+		const RETRY_MAX_MS = 120_000;
+		const RELATIVE_TICK_MS = 30_000;
+		const CLIENT_META_VERSION = "1.0.2";
 
 		const en = {
 			balance: "Balance",
@@ -38,6 +41,10 @@ window.__ModuleLoader__.load({
 			error: "Could not read the balance",
 			refreshHint: "Refresh balance",
 			updatedAt: "Updated {time}",
+			updatedAtAgo: "Updated {time} ({ago})",
+			justNow: "just now",
+			minutesAgo: "{n} min ago",
+			hoursAgo: "{n} h ago",
 			stale: "Showing the last known balance",
 		};
 		const ru = {
@@ -50,6 +57,10 @@ window.__ModuleLoader__.load({
 			error: "Не удалось получить баланс",
 			refreshHint: "Обновить баланс",
 			updatedAt: "Обновлено {time}",
+			updatedAtAgo: "Обновлено {time} ({ago})",
+			justNow: "только что",
+			minutesAgo: "{n} мин назад",
+			hoursAgo: "{n} ч назад",
 			stale: "Показан последний известный баланс",
 		};
 		const zh = {
@@ -62,6 +73,10 @@ window.__ModuleLoader__.load({
 			error: "无法获取余额",
 			refreshHint: "刷新余额",
 			updatedAt: "更新于 {time}",
+			updatedAtAgo: "更新于 {time}（{ago}）",
+			justNow: "刚刚",
+			minutesAgo: "{n} 分钟前",
+			hoursAgo: "{n} 小时前",
 			stale: "显示上次获取的余额",
 		};
 
@@ -172,6 +187,10 @@ window.__ModuleLoader__.load({
 			let lastStart = 0;
 			let generation = 0;
 			let disposed = false;
+			let failStreak = 0;
+			/** Back off after failed reads so an outage is not polled at the normal cadence. */
+			const nextDelay = () =>
+				failStreak === 0 ? POLL_MS : Math.min(RETRY_BASE_MS * 2 ** (failStreak - 1), RETRY_MAX_MS);
 
 			const publish = (next) => {
 				state = next;
@@ -229,11 +248,23 @@ window.__ModuleLoader__.load({
 				publish({ ...state, refreshing: true });
 				const request = read()
 					.then((next) => {
-						if (!disposed && id === generation) publish(next);
+						if (!disposed && id === generation) {
+							if (failStreak > 0) {
+								failStreak = 0;
+								try {
+									console.info("[balance-badge] balance read recovered");
+								} catch {
+									/* ignore */
+								}
+							}
+							publish(next);
+						}
 					})
 					.catch((error) => {
 						if (!disposed && id === generation) {
-							report("balance read", error);
+							failStreak += 1;
+							// One line per failure streak, never one per retry.
+							if (failStreak === 1) report("balance read", error);
 							publish({
 								kind: state.kind === "ready" ? "stale" : "error",
 								wallets: state.wallets,
@@ -259,13 +290,27 @@ window.__ModuleLoader__.load({
 			};
 
 			ctx.effect(() => {
-				refresh({ force: true });
-				const timer = setInterval(() => {
-					if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-					refresh();
-				}, POLL_MS);
+				let timer = null;
+				let stopped = false;
+				const schedule = (delay) => {
+					if (stopped) return;
+					timer = setTimeout(() => {
+						timer = null;
+						run();
+					}, delay);
+				};
+				const run = () => {
+					if (stopped) return;
+					if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+						schedule(POLL_MS);
+						return;
+					}
+					refresh().finally(() => schedule(nextDelay()));
+				};
+				run();
 				return () => {
-					clearInterval(timer);
+					stopped = true;
+					if (timer !== null) clearTimeout(timer);
 					disposed = true;
 					generation++;
 				};
@@ -330,7 +375,21 @@ window.__ModuleLoader__.load({
 			};
 		}
 
-		function describe(state, tr) {
+		/** Coarse freshness, in the chip's own words: "just now", "5 min ago", "2 h ago". */
+		function relativeAge(updatedAt, now, tr) {
+			try {
+				const ms = now - updatedAt;
+				if (!Number.isFinite(ms) || ms < 0) return "";
+				const minutes = Math.floor(ms / 60_000);
+				if (minutes < 1) return tr("justNow");
+				if (minutes < 60) return tr("minutesAgo", { n: minutes });
+				return tr("hoursAgo", { n: Math.floor(minutes / 60) });
+			} catch {
+				return "";
+			}
+		}
+
+		function describe(state, tr, now) {
 			const lines = [];
 			if (state.kind === "ready" || state.kind === "stale") {
 				lines.push(tr("balance") + ": " + (formatWallets(state.wallets) || "--"));
@@ -339,7 +398,8 @@ window.__ModuleLoader__.load({
 				if (state.updatedAt) {
 					try {
 						const time = new Date(state.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-						lines.push(tr("updatedAt", { time }));
+						const ago = relativeAge(state.updatedAt, now, tr);
+						lines.push(ago === "" ? tr("updatedAt", { time }) : tr("updatedAtAgo", { time, ago }));
 					} catch {
 						/* skip the timestamp */
 					}
@@ -374,13 +434,21 @@ window.__ModuleLoader__.load({
 			const refresh = React.useCallback(() => {
 				if (bound) bound.refresh({ force: true });
 			}, [bound]);
+			// Re-render on a slow tick so "5 min ago" in the tooltip stays honest.
+			const [, setTick] = React.useState(0);
+			React.useEffect(() => {
+				if (!state.updatedAt) return undefined;
+				const timer = setInterval(() => setTick((n) => n + 1), RELATIVE_TICK_MS);
+				return () => clearInterval(timer);
+			}, [state.updatedAt]);
+
 			const modifier = state.kind === "ready" ? "" : " dbb-chip--" + state.kind;
 			const classes =
 				"dbb-chip" +
 				(variant === "footer" ? " dbb-chip--footer" : " dbb-chip--frame") +
 				(variant === "footer" && !wide ? " dbb-chip--rail" : "") +
 				modifier;
-			const tooltip = describe(state, tr);
+			const tooltip = describe(state, tr, Date.now());
 			const showText = !(variant === "footer" && !wide);
 			return h(
 				"button",
@@ -393,7 +461,18 @@ window.__ModuleLoader__.load({
 					"data-plugin-balance-badge": variant,
 				},
 				h(CoinIcon),
-				showText ? h("span", { className: "dbb-chip__value" }, chipText(state)) : null,
+				showText
+					? h(
+							"span",
+							{
+								className: "dbb-chip__value",
+								"aria-live": "polite",
+								"aria-atomic": "true",
+								"aria-busy": state.refreshing ? "true" : "false",
+							},
+							chipText(state)
+						)
+					: null,
 				state.refreshing && showText ? h("span", { className: "dbb-chip__dot" }) : null
 			);
 		}
